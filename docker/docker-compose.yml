@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+
+  # ── MySQL 8.0 主库 ──────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: peanut-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: peanut_trace
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../../sql/01_create_tables_p1.sql:/docker-entrypoint-initdb.d/01_tables_p1.sql
+      - ../../sql/01_create_tables_p2.sql:/docker-entrypoint-initdb.d/02_tables_p2.sql
+      - ../../sql/03_init_data.sql:/docker-entrypoint-initdb.d/03_init_data.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - peanut-net
+
+  # ── Redis 6 缓存 ─────────────────────────────────────
+  redis:
+    image: redis:6-alpine
+    container_name: peanut-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - peanut-net
+
+  # ── 后端应用 ─────────────────────────────────────────
+  backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: peanut-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/peanut_trace?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root123456
+      SPRING_DATA_REDIS_HOST: redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - peanut-net
+
+  # ── 前端应用 ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    container_name: peanut-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - peanut-net
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  peanut-net:
+    driver: bridge

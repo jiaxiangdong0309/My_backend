@@ -1,0 +1,87 @@
+### Java ###
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+!/.mvn/wrapper/maven-wrapper.jar
+
+### Spring Boot ###
+*.springBeans
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### OS ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### Logs ###
+*.log
+logs/
+log/
+
+### Temp files ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+### Environment ###
+.env
+.env.local
+.env.*.local
+
+### Application ###
+application-local.yml
+application-dev.yml
+application-prod.yml
+application-test.yml
+
+### Database ###
+*.h2.db
+*.mv.db
+
+docs/

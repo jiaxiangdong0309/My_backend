@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: peanut-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: peanut_trace
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - peanut_mysql_data:/var/lib/mysql
+      - ../../sql/01_create_tables_p1.sql:/docker-entrypoint-initdb.d/01_tables_p1.sql
+      - ../../sql/01_create_tables_p2.sql:/docker-entrypoint-initdb.d/02_tables_p2.sql
+      - ../../sql/03_init_data.sql:/docker-entrypoint-initdb.d/03_init_data.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:6-alpine
+    container_name: peanut-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - peanut_redis_data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  peanut_mysql_data:
+  peanut_redis_data:

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.peanut.trace.common.mapper.PeanutProductMapper">
+
+    <!-- 区域产量统计 -->
+    <select id="selectRegionStats" resultType="map">
+        SELECT
+            fi.region,
+            COUNT(pp.id)         AS batchCount,
+            0.0                  AS totalKg
+        FROM peanut_product pp
+        LEFT JOIN farmer_info fi ON pp.farmer_id = fi.farmer_id
+        WHERE pp.is_deleted = 0
+        GROUP BY fi.region
+        ORDER BY batchCount DESC
+    </select>
+
+    <!-- 质检合格率统计 -->
+    <select id="selectQualifyRateStats" resultType="map">
+        SELECT
+            fi.region,
+            COUNT(pp.id)                                          AS totalCount,
+            SUM(CASE WHEN pp.inspect_result = '合格' THEN 1 ELSE 0 END) AS passCount,
+            ROUND(
+                SUM(CASE WHEN pp.inspect_result = '合格' THEN 1 ELSE 0 END)
+                * 100.0 / COUNT(pp.id), 1
+            )                                                     AS passRate
+        FROM peanut_product pp
+        LEFT JOIN farmer_info fi ON pp.farmer_id = fi.farmer_id
+        WHERE pp.is_deleted = 0
+        <if test="region != null and region != ''">
+            AND fi.region = #{region}
+        </if>
+        GROUP BY fi.region
+        ORDER BY passRate DESC
+    </select>
+
+    <!-- 月度趋势统计 -->
+    <select id="selectMonthTrend" resultType="map">
+        SELECT
+            DATE_FORMAT(pp.create_time, '%Y-%m') AS month,
+            COUNT(pp.id)                          AS batchCount,
+            ROUND(
+                SUM(CASE WHEN pp.inspect_result = '合格' THEN 1 ELSE 0 END)
+                * 100.0 / COUNT(pp.id), 1
+            )                                     AS passRate
+        FROM peanut_product pp
+        WHERE pp.is_deleted = 0
+          AND YEAR(pp.create_time) = #{year}
+        GROUP BY DATE_FORMAT(pp.create_time, '%Y-%m')
+        ORDER BY month ASC
+    </select>
+
+</mapper>
